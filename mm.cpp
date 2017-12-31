@@ -1,10 +1,29 @@
 #include <iostream>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <string>
 #include <curl/curl.h>
 #include "json.hpp"
 #include <vector>
+#include <sstream>
+#include <iterator>
 
 using json = nlohmann::json;
+using namespace std;
+template<typename Out>
+void split(const std::string &s, char delim, Out result) {
+	std::stringstream ss(s);
+	std::string item;
+	while (std::getline(ss, item, delim)) {
+		*(result++) = item;
+	}
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+	std::vector<std::string> elems;
+	split(s, delim, std::back_inserter(elems));
+	return elems;
+}
 
 namespace ns {
 	struct algoritm {
@@ -12,6 +31,7 @@ namespace ns {
 		std::string current_mining_coin;
 		std::string host;
 		std::string all_host_list;
+		std::vector<std::string> hosts;
 		int port;
 		int algo_switch_port;
 		int multialgo_switch_port;
@@ -43,7 +63,8 @@ namespace ns {
 		p.algo = j.at("algo").get<std::string>();
 		p.current_mining_coin = j.at("current_mining_coin").get<std::string>();
 		p.host = j.at("host").get<std::string>();
-		p.all_host_list = j.at("all_host_list").get<std::string>();
+		p.all_host_list = j["all_host_list"].get<std::string>();
+		p.hosts = split(j["all_host_list"].get<std::string>(), ';');
 		p.port = j.at("port").get<int>();
 		p.algo_switch_port = j.at("algo_switch_port").get<int>();
 		p.profit = j.at("profit").get<double>();
@@ -52,6 +73,7 @@ namespace ns {
 	}
 }
 
+
 static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
 	((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -59,14 +81,39 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
 }
 
 void startMining(ns::algoritm a){
+	std::string host;
+	std::string loc = "europe";
+	for(int i = 0; i < a.hosts.size(); i++){
+		if(a.hosts[i].find(loc) != std::string::npos){
+			host = a.hosts[i];
+		}
+	}
+	if(a.hosts.size() == 1){
+		host = a.host;
+	}
 	std::cout << "starting to mine " << a.algo << " on port: " << a.algo_switch_port << std::endl;
 	std::string executeString = "ccminer -a " + a.algo + " -o stratum+tcp://";
-	executeString += "europe." + a.algo + "-hub.miningpoolhub.com:";
+	executeString += host + ":";
 	executeString += std::to_string(a.algo_switch_port);
 	executeString += " -u jlowzow.ygdrasil -p x";
 	std::transform(executeString.begin(), executeString.end(), executeString.begin(), ::tolower);
 	std::cout << executeString << std::endl;
+
+	const char * exe = executeString.c_str();
+
+	pid_t pid;
+	int status, died;
+	switch(pid=fork()){
+		case -1: cout << "can't fork\n";
+				 exit(-1);
+		case 0: execl(exe, "ccminer", 0);
+		default: died = wait(&status);
+				 cout << "finish" << endl;
+	}
 }
+
+
+
 
 int main(void)
 {
@@ -93,8 +140,6 @@ int main(void)
 	std::vector<json> v = j["return"].get<std::vector<json>>();
 	std::vector<ns::algoritm> liste;
 
-
-
 	for(int i=0; i < v.size(); i++){
 		liste.push_back(v[i]);
 	}
@@ -104,8 +149,6 @@ int main(void)
 	for (int i=0; i < liste.size(); i++){
 		std::cout << liste[i].algo<< " "<< liste[i].normalized_profit_nvidia << std::endl;
 	}
-
-	std::cout << liste[0].all_host_list << std::endl;
 
 	startMining(liste[0]);
 
