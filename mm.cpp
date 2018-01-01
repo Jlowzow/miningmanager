@@ -1,4 +1,7 @@
 #include <iostream>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <string>
@@ -101,15 +104,20 @@ void startMining(ns::algoritm a){
 
 	const char * exe = executeString.c_str();
 
-	pid_t pid;
-	int status, died;
-	switch(pid=fork()){
-		case -1: cout << "can't fork\n";
-				 exit(-1);
-		case 0: execl(exe, "ccminer", 0);
-		default: died = wait(&status);
-				 cout << "finish" << endl;
+	FILE *fpipe;
+	char *command = (char*)exe;
+	char line[256];
+
+	if( !(fpipe = (FILE*)popen(command, "r")) )
+	{
+		perror("problems with pipe");
+		exit(1);
 	}
+	while( fgets(line, sizeof line, fpipe))
+	{
+		printf("%s", line);
+	}
+	pclose(fpipe);
 }
 
 
