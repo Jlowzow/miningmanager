@@ -180,12 +180,11 @@ ns::algoritm profit(){
 int main(void){
 	bool mostprofitable = true;
 	ns::algoritm a = profit();
-	string command = prepareCmd(a);
 	while(true)
 	{	
 		pid_t pID = fork();
 		if (pID == 0){
-			cout << "child" << endl;
+			string command = prepareCmd(a);
 			startMining(command);
 			cout << "mining stopped... waiting 10 seconds" << endl;
 			sleep(10);
