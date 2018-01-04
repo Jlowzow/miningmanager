@@ -83,7 +83,7 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
 	return size * nmemb;
 }
 
-void startMining(ns::algoritm a){
+std::string prepareCmd(ns::algoritm a){
 	std::string host;
 	std::string loc = "europe";
 	for(int i = 0; i < a.hosts.size(); i++){
@@ -100,9 +100,12 @@ void startMining(ns::algoritm a){
 	executeString += std::to_string(a.algo_switch_port);
 	executeString += " -u jlowzow.ygdrasil -p x";
 	std::transform(executeString.begin(), executeString.end(), executeString.begin(), ::tolower);
-	std::cout << executeString << std::endl;
+	return executeString;
+}
 
-	const char * exe = executeString.c_str();
+void startMining(string cmd)
+{
+	const char * exe = cmd.c_str();
 
 	FILE *fpipe;
 	char *command = (char*)exe;
@@ -120,11 +123,17 @@ void startMining(ns::algoritm a){
 	pclose(fpipe);
 }
 
+class miner {
+	string currentCmd;
+	string newCmd;
 
+public:
+	void startMining();
+	void setCurrentCmd();
+	void setnewCmd();
+};
 
-
-int main(void)
-{
+ns::algoritm profit(){
 	json j;
 	CURL *curl;
 	CURLcode res;
@@ -157,8 +166,44 @@ int main(void)
 	for (int i=0; i < liste.size(); i++){
 		std::cout << liste[i].algo<< " "<< liste[i].normalized_profit_nvidia << std::endl;
 	}
+	return liste[0];
+}
 
-	startMining(liste[0]);
-
+int main(void){
+	bool mostprofitable = true;
+	ns::algoritm a = profit();
+	string command = prepareCmd(a);
+	while(true)
+	{	
+		pid_t pID = fork();
+		if (pID == 0){
+			cout << "child" << endl;
+			startMining(command);
+			cout << "mining stopped... waiting 10 seconds" << endl;
+			sleep(10);
+		}
+		else if(pID < 0){
+			cerr << "failed to fork" << endl;
+			exit(1);
+		}
+		else
+		{
+			mostprofitable = true;
+			while(mostprofitable){
+				cout << "checking profitability soon" << endl;
+				sleep(5);
+				ns::algoritm b = profit();
+				if(a.algo == b.algo){
+					cout << "mining on " << a.algo << endl;
+				}
+				else{
+					cout << "switching algoritm!" << endl;
+					a = b;
+					mostprofitable = false;
+				}
+			}
+			kill(pID, SIGKILL);
+		}
+	}
 	return 0;
 }
