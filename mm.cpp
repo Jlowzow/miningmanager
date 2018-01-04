@@ -89,7 +89,7 @@ std::string prepareCmd(ns::algoritm a){
 	std::string algo = a.algo;
 
 	if(algo = Lyra2RE2){
-		algo = lyra2v2;
+		algo = "lyra2v2";
 	}
 
 	for(int i = 0; i < a.hosts.size(); i++){
