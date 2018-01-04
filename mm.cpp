@@ -86,6 +86,12 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
 std::string prepareCmd(ns::algoritm a){
 	std::string host;
 	std::string loc = "europe";
+	std::string algo = a.algo;
+
+	if(algo = Lyra2RE2){
+		algo = lyra2v2;
+	}
+
 	for(int i = 0; i < a.hosts.size(); i++){
 		if(a.hosts[i].find(loc) != std::string::npos){
 			host = a.hosts[i];
@@ -94,7 +100,7 @@ std::string prepareCmd(ns::algoritm a){
 	if(a.hosts.size() == 1){
 		host = a.host;
 	}
-	std::cout << "starting to mine " << a.algo << " on port: " << a.algo_switch_port << std::endl;
+	std::cout << "starting to mine " << algo << " on port: " << a.algo_switch_port << std::endl;
 	std::string executeString = "ccminer -a " + a.algo + " -o stratum+tcp://";
 	executeString += host + ":";
 	executeString += std::to_string(a.algo_switch_port);
@@ -105,6 +111,7 @@ std::string prepareCmd(ns::algoritm a){
 
 void startMining(string cmd)
 {
+	cout << cmd << endl;
 	const char * exe = cmd.c_str();
 
 	FILE *fpipe;
