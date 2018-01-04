@@ -199,7 +199,7 @@ int main(void){
 			mostprofitable = true;
 			while(mostprofitable){
 				cout << "checking profitability soon" << endl;
-				sleep(5);
+				sleep(60);
 				ns::algoritm b = profit();
 				if(a.algo == b.algo){
 					cout << "mining on " << a.algo << endl;
