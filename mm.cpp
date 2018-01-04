@@ -87,8 +87,9 @@ std::string prepareCmd(ns::algoritm a){
 	std::string host;
 	std::string loc = "europe";
 	std::string algo = a.algo;
+	cout << algo << endl;
 
-	if(algo = Lyra2RE2){
+	if(strcmp(algo.c_str(),"Lyra2RE2") == 0){
 		algo = "lyra2v2";
 	}
 
@@ -101,7 +102,7 @@ std::string prepareCmd(ns::algoritm a){
 		host = a.host;
 	}
 	std::cout << "starting to mine " << algo << " on port: " << a.algo_switch_port << std::endl;
-	std::string executeString = "ccminer -a " + a.algo + " -o stratum+tcp://";
+	std::string executeString = "ccminer -a " + algo + " -o stratum+tcp://";
 	executeString += host + ":";
 	executeString += std::to_string(a.algo_switch_port);
 	executeString += " -u jlowzow.ygdrasil -p x";
