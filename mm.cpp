@@ -188,6 +188,7 @@ int main(void){
 			startMining(command);
 			cout << "mining stopped... waiting 10 seconds" << endl;
 			sleep(10);
+			exit(1);
 		}
 		else if(pID < 0){
 			cerr << "failed to fork" << endl;
