@@ -209,7 +209,18 @@ int main(void){
 					mostprofitable = false;
 				}
 			}
-			kill(pID, SIGKILL);
+			kill(pid, SIGTERM);
+
+			bool died = false;
+			for (int loop; !died && loop < 5 /*For example */; ++loop)
+			{
+				int status;
+				pid_t id;
+				sleep(1);
+				if (waitpid(pid, &status, WNOHANG) == pid) died = true;
+			}
+
+			if (!died) kill(pid, SIGKILL);
 		}
 	}
 	return 0;
